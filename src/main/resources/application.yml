@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: chat
+  mongodb:
+    auto-index-creation: true
+    host: mongodb
+    port: 27017
+    database: chat
+    username: admin
+    password: admin
+    authentication-database: admin
+oauth:
+  github:
+    client:
+      id: ghci
+      secret: ghcs
