@@ -1,10 +1,73 @@
-# Chat
+# Backend
 
-<br/>
+API de chat em tempo real construída com Spring Boot. Comunicação via WebSocket + STOMP, persistência no MongoDB, e dois modos de login: OAuth via GitHub ou usuário gerado aleatoriamente.
+ 
+> Para rodar o projeto completo via Docker, consulte o [README na raiz do repositório](https://github.com/lucas-adm/livechat/blob/main/README.md).
 
-Backend de chat em tempo real construído com Spring Boot, criado como estudo prático de comunicação via WebSocket em Java. O foco está em entender a mecânica do STOMP sobre WebSocket — rastreamento de presença, ciclo de vida de mensagens e arquitetura orientada a eventos — sem a complexidade de camadas de autenticação ou abstrações desnecessárias.
+## Pré-requisitos
+ 
+- Java 21+
+- Maven 3.8+
+- Docker (apenas para o modo com banco em container)
 
-<br/>
+## OAuth GitHub (opcional)
+
+Para habilitar o login via GitHub consulte o [README na raiz do repositório](https://github.com/lucas-adm/livechat/blob/main/README.md#oauth-github-opcional).
+
+## Modos de execução local
+
+### Modo 1 — Backend local + MongoDB no Docker
+ 
+Use esse modo quando quiser rodar o backend direto na sua máquina sem precisar instalar o MongoDB.
+ 
+**1. Suba apenas o MongoDB:**
+> na raíz, onde se encontra o `docker-compose.yml`
+```bash
+docker compose up -d mongodb
+```
+ 
+**2. Rode o backend:**
+> dentro da pasta `backend`
+```bash
+./mvnw spring-boot:run
+```
+ 
+A API estará disponível em `http://localhost:8080`.
+ 
+### Modo 2 — Backend e MongoDB ambos locais
+ 
+Use esse modo se você já tem o MongoDB instalado na sua máquina.
+ 
+**1. Certifique-se de que o MongoDB está rodando:**
+
+**2. Comente as seguintes linhas em `application.yml`:**
+
+```java
+spring:
+  # profiles:
+  #   active: docker
+  ...
+```
+
+Se seu banco local usa autenticação, adiocione as seguintes linhas:
+
+```java
+spring:
+  ...
+  mongodb:
+    ...
+    username: ${DB_USERNAME:seu_usuario} # Altere
+    password: ${DB_PASSWORD:sua_senha} # Altere
+    authentication-database: ${DB_AUTH:admin}
+```
+ 
+**3. Rode o backend:**
+ 
+```bash
+./mvnw spring-boot:run
+```
+ 
+A API estará disponível em `http://localhost:8080`.
 
 ## Funcionalidades
 
@@ -14,22 +77,6 @@ Backend de chat em tempo real construído com Spring Boot, criado como estudo pr
 - Rastreamento de presença online (eventos de conexão e desconexão)
 - Histórico de mensagens persistido no MongoDB
 - Duas estratégias de login: OAuth via GitHub ou usuário gerado aleatoriamente (sem credenciais)
-
-<br/>
-
-## Tecnologias
-
-| Camada | Tecnologia |
-|---|---|
-| Linguagem | Java 21 |
-| Framework | Spring Boot 4.0.1 |
-| WebSocket | Spring WebSocket + STOMP + SockJS |
-| Persistência | MongoDB + Spring Data |
-| Autenticação | GitHub OAuth 2.0 / Random User API |
-| Utilitários | Lombok |
-| Containerização | Docker + Docker Compose |
-
-<br/>
 
 ## Visão Geral da Arquitetura
 
@@ -54,38 +101,6 @@ src/
         └── randomuser/         # Integração com a Random User API
 ```
 
-<br/>
-
-## Como Executar
-
-### Pré-requisitos
-
-- Java 21+
-- Maven 3.8+
-- Docker e Docker Compose
-
-### Com Docker (recomendado)
-
-```bash
-git clone https://github.com/lucas-adm/springboot-chat.git
-cd springboot-chat
-docker-compose up --build
-```
-
-Isso sobe a aplicação junto com uma instância do MongoDB. A API estará disponível em `http://localhost:8080`.
-
-### Localmente
-
-Certifique-se de ter uma instância do MongoDB rodando e ajuste o `application.yml` conforme necessário.
-
-```bash
-./mvnw spring-boot:run
-```
-
-> **Observação:** o login via GitHub requer valores válidos de `oauth.github.client.id` e `oauth.github.client.secret` no `application.yml`. O login via usuário aleatório funciona sem nenhuma configuração adicional.
-
-<br/>
-
 ## API REST
 
 ### Usuários
@@ -108,24 +123,7 @@ Certifique-se de ter uma instância do MongoDB rodando e ajuste o `application.y
 |--------|----------|-----------|
 | `GET` | `/messages` | Retorna o histórico completo de mensagens (ordenado por data de criação) |
 
-<br/>
-
 ## API WebSocket
-
-**Endpoint de handshake:** `/livechat` (com fallback SockJS habilitado)
-
-Na conexão, envie o usuário autenticado como JSON no header STOMP `user`:
-
-```javascript
-const socket = new SockJS('http://localhost:8080/livechat');
-const stompClient = Stomp.over(socket);
-
-const user = { id: "...", username: "...", avatar: "...", displayName: "...", bio: "..." };
-
-stompClient.connect({ user: JSON.stringify(user) }, () => {
-  // inscreva-se nos tópicos aqui
-});
-```
 
 ### Destinos para envio (`/app/...`)
 
@@ -173,17 +171,9 @@ stompClient.connect({ user: JSON.stringify(user) }, () => {
 { "user": { "id": "...", "username": "..." }, "online": true }
 ```
 
-<br/>
-
 ## Observações
 
 - A presença de usuários é rastreada **em memória** via `ConcurrentHashMap` e é resetada ao reiniciar a aplicação.
 - O delete de mensagem é um **soft delete** — o conteúdo é apagado e o campo `deleted` é marcado como `true`, mas o documento permanece no MongoDB.
 - O campo `clientId` no `MessageInput` é um identificador gerado pelo cliente, útil para atualizações otimistas de UI.
 - Não há nenhuma camada de autenticação protegendo os endpoints REST ou as conexões WebSocket — isso é intencional.
-
-<br/>
-
-## Objetivo
-
-Este repositório faz parte de um aprendizado pessoal com foco em entender os padrões de comunicação via WebSocket e STOMP em Java. A ausência intencional de autenticação, criptografia e abstrações complexas mantém a mecânica central visível e fácil de acompanhar.
