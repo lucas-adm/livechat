@@ -3,7 +3,7 @@ import { OnlineIdsOutput } from '../dtos/out';
 import { User } from '../models';
 
 export function createUserService() {
-  const url: string = process.env.API!;
+  const url: string = process.env.API_URL!;
   const api = createHttpClient(url);
 
   async function authViaRandomUser() {

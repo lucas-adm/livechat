@@ -1,6 +1,4 @@
 spring:
-  profiles:
-    active: docker
   application:
     name: livechat
   mongodb:
@@ -8,6 +6,9 @@ spring:
     host: ${DB_HOST:localhost}
     port: ${DB_PORT:27017}
     database: ${DB:livechat}
+    username: ${DB_USERNAME:admin}
+    password: ${DB_PASSWORD:admin}
+    authentication-database: ${DB_AUTH:admin}
 oauth:
   github:
     client:

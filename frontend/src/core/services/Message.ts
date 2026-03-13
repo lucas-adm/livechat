@@ -2,7 +2,7 @@ import { createHttpClient } from '../http';
 import { Message } from '../models';
 
 export function createMessageService() {
-  const url: string = process.env.API!;
+  const url: string = process.env.API_URL!;
 
   const api = createHttpClient(url);
 

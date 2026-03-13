@@ -1,0 +1,52 @@
+services:
+  mongodb:
+    container_name: db
+    image: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${DB_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  backend:
+    container_name: server
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_AUTH: ${DB_AUTH}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
+    ports:
+      - '8080:8080'
+    depends_on:
+      mongodb:
+        condition: service_healthy
+  frontend:
+    container_name: client
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_STOMP_URL: ${STOMP_URL}
+    environment:
+      API_URL: ${API_URL}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+volumes:
+  mongodata:
+    driver: local

@@ -17,7 +17,7 @@ import { createWebSocketClient } from '../ws';
 import { User } from '../models';
 
 export function createChatService() {
-  const url = process.env.NEXT_PUBLIC_WEBSOCKET!;
+  const url = process.env.NEXT_PUBLIC_STOMP_URL!;
   const socket = createWebSocketClient(url);
   const pendingSubscriptions: (() => void)[] = [];
   let isConnected = false;
