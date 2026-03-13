@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Frontend
 
-## Getting Started
+Interface do chat em tempo real, construída com Next.js 16 e React 19. Comunicação com o backend via STOMP sobre WebSocket (SockJS) e chamadas REST para carregamento inicial de dados.
 
-First, run the development server:
+> Para rodar o projeto completo via Docker, consulte o [README na raiz do repositório](https://github.com/lucas-adm/livechat/blob/main/README.md).
+
+## Pré-requisitos
+
+- Node.js 22+
+- Backend rodando em `http://localhost:8080` — veja o [README do backend](https://github.com/lucas-adm/livechat/blob/main/backend/README.md)
+
+## Instalação
+
+```bash
+cd frontend
+npm install
+```
+
+## OAuth GitHub (opcional)
+
+Para habilitar o login via GitHub consulte o [README na raiz do repositório](https://github.com/lucas-adm/livechat/blob/main/README.md#oauth-github-opcional).
+
+## Configure as variáveis de ambiente
+
+```bash
+cp .env.example .env
+```
+
+Abra o `.env` e preencha os valores:
+
+```env
+API_URL=http://localhost:8080
+NEXT_PUBLIC_STOMP_URL=http://localhost:8080
+GITHUB_CLIENT_ID={SEU-ID} # ghcs
+```
+
+> `API_URL` é consumida no servidor (Server Components / Route Handlers), por isso não leva o prefixo `NEXT_PUBLIC_`.
+> `NEXT_PUBLIC_STOMP_URL` é consumida no browser, dentro do `WebSocketProvider`.
+
+## Desabilite o standalone
+
+> next.config.ts
+
+```js
+const nextConfig: NextConfig = {
+  /* config options here */
+  /* output: 'standalone', <- Altere esta única linha */
+  images: {...},
+};
+
+```
+
+## Rodando em desenvolvimento
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Acesse em `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Build de produção
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+## Estrutura relevante
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+src/
+├── app/
+│   ├── (pages)/
+│   │   ├── page.tsx          # Tela de login (GitHub ou anônimo)
+│   │   ├── redirect/         # Callback OAuth e login anônimo
+│   │   └── chat/             # Interface principal do chat
+│   └── globals.css
+├── components/               # Componentes compartilhados (Avatar, etc.)
+├── contexts/                 # Providers: User, Messages, WebSocket, Typing
+├── core/
+│   ├── dtos/                 # Tipos de entrada e saída
+│   ├── http/                 # Cliente HTTP genérico
+│   ├── models/               # Modelos de domínio (User, Message)
+│   ├── schemas/              # Schemas Zod para validação de formulários
+│   ├── services/             # Serviços (Chat, User, Message)
+│   └── ws/                   # Cliente WebSocket (STOMP + SockJS)
+├── hooks/                    # Hooks para acesso aos contextos
+└── utils/                    # Utilitários (formatação de datas, normalização)
+```
